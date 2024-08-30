@@ -31,3 +31,15 @@ repos:
     hooks:
       - id: prettier
         args: ["--cache-location=.prettiercache"]
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: clippy
+        args: [--all-features, --all-targets, --, -D, warnings]
+      - id: cargo-check
+      - id: fmt
+        args: [--all, --]
+  - repo: https://github.com/hoxbro/taplo-pre-commit
+    rev: v0.7.0
+    hooks:
+      - id: taplo
