@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/doco"]
+members = ["crates/*", "examples/*"]
 
 # Opt-in to the new feature resolver introduced in Rust 1.51 and Edition 2021.
 # https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
@@ -12,3 +12,7 @@ edition = "2021"
 description = "A framework and runner for end-to-end tests for web applications"
 homepage = "https://github.com/otterbuild/doco"
 repository = "https://github.com/otterbuild/doco.git"
+
+[workspace.metadata.bin]
+cargo-leptos = { version = "0.2.18" }
+leptosfmt = { version = "0.1.30" }

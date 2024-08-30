@@ -43,3 +43,11 @@ repos:
     rev: v0.9.3
     hooks:
       - id: taplo
+  - repo: local
+    hooks:
+      - id: leptosfmt
+        name: leptosfmt
+        description: Format the view! macro of Leptos
+        language: system
+        entry: cargo bin leptosfmt -q
+        types: [rust]
