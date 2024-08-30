@@ -25,6 +25,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
+            .github/workflows/yaml.yml
             **/*.yaml
             **/*.yml
 
@@ -39,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs: detect-changes
-    if: needs.detect-changes.outputs.any_changed == 'true'
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
@@ -53,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs: detect-changes
-    if: needs.detect-changes.outputs.any_changed == 'true'
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
