@@ -1,16 +1,18 @@
-# Template Repository
+# 🦕 doco
 
-This repository is a template for creating new repositories. It comes
-preconfigured with a default developer experience, including pre-commit hooks
-and GitHub Actions.
+doco is a framework and runner for end-to-end tests of web applications.
 
-## Usage
+## License
 
-When creating a new repository in [otterbuild/den], set `from_template` to
-`true` to create the repository from this template.
+Licensed under either of
 
-```terraform
-from_template = true
-```
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
-[otterbuild/den]: https://github.com/otterbuild/den
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
