@@ -1,0 +1,55 @@
+[package]
+name = "examples-leptos"
+
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+ssr = [
+  "dep:axum",
+  "dep:leptos_axum",
+  "dep:tokio",
+  "dep:tower",
+  "dep:tower-http",
+  "dep:tracing",
+  "leptos/ssr",
+  "leptos_meta/ssr",
+  "leptos_router/ssr",
+]
+
+# Defines a size-optimized profile for the WASM bundle in release mode
+[profile.wasm-release]
+inherits = "release"
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[package.metadata.leptos]
+site-root = "target/leptos"
+style-file = "style/main.scss"
+assets-dir = "public"
+bin-features = ["ssr"]
+lib-features = ["hydrate"]
+lib-profile-release = "wasm-release"
+
+[dependencies]
+axum = { version = "0.7.5", optional = true }
+console_error_panic_hook = "0.1.7"
+leptos = { version = "0.6.14" }
+leptos_axum = { version = "0.6.14", optional = true }
+leptos_meta = { version = "0.6.14" }
+leptos_router = { version = "0.6.14" }
+tokio = { version = "1.40.0", features = ["rt-multi-thread"], optional = true }
+tower = { version = "0.4.13", optional = true }
+tower-http = { version = "0.5.2", features = ["fs"], optional = true }
+wasm-bindgen = "=0.2.93"
+thiserror = "1.0.63"
+tracing = { version = "0.1.40", optional = true }
+http = "1.1.0"
