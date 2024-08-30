@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/doco"]
+
+# Opt-in to the new feature resolver introduced in Rust 1.51 and Edition 2021.
+# https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
+resolver = "2"
+
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+
+description = "A framework and runner for end-to-end tests for web applications"
+homepage = "https://github.com/otterbuild/doco"
+repository = "https://github.com/otterbuild/doco.git"
