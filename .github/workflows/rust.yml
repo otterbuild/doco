@@ -85,6 +85,12 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
+    container:
+      # Code coverage is run inside the tarpaulin container with elevated
+      # privileges so that it can instrument the code and collect coverage data.
+      image: xd009642/tarpaulin:0.31.2
+      options: --security-opt seccomp=unconfined
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -92,7 +98,26 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: tarpaulin-1.80.1
 
-      - name: Run tests
-        run: cargo test --all-features --all-targets
+      - name: Run tests with test coverage
+        run: |
+          cargo tarpaulin \
+            --all-features \
+            --engine llvm \
+            --out Xml \
+            --skip-clean \
+            --timeout 120 \
+            --verbose \
+            --workspace
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
