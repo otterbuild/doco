@@ -53,7 +53,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: cargo-1.81.0
           cache-directories: ".bin"
 
       - name: Install cargo-binstall
@@ -85,7 +85,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: cargo-1.81.0
           cache-directories: ".bin"
 
       - name: Install cargo-binstall
@@ -117,7 +117,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: cargo-1.81.0
           cache-directories: ".bin"
 
       - name: Install cargo-binstall
