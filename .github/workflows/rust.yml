@@ -54,7 +54,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: cargo-1.81.0
 
       - name: Run Clippy
         run: cargo clippy --all-features --all-targets -- -D warnings
@@ -73,7 +73,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: cargo-1.80.1
+          prefix-key: cargo-1.81.0
 
       - name: Run rustfmt
         run: cargo fmt --check
@@ -98,7 +98,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.3
         with:
-          prefix-key: tarpaulin-1.80.1
+          prefix-key: tarpaulin-1.81.0
 
       - name: Run tests with test coverage
         run: |
