@@ -1,41 +1,15 @@
-use std::time::Duration;
-
 use doco::server::Server;
-use doco::{Doco, Result, TestCase};
-use fantoccini::Locator;
-use tokio::time::sleep;
+use doco::{Client, Doco, Locator, Result, TestCase};
 
 struct Leptos;
 
 impl TestCase for Leptos {
-    async fn execute(&self, host: String, port: u16) -> Result<()> {
-        println!("Waiting for Leptos app to start...");
-        for _ in 0..10 {
-            if reqwest::Client::new()
-                .get(format!("http://{host}:{port}/"))
-                .send()
-                .await
-                .is_ok()
-            {
-                break;
-            } else {
-                sleep(Duration::from_secs(1)).await;
-            }
-        }
-
-        println!("Connecting to WebDriver...");
-        let client = fantoccini::ClientBuilder::native()
-            .connect("http://localhost:4444")
-            .await
-            .expect("failed to connect to WebDriver");
-
+    async fn execute(&self, client: Client, host: String, port: u16) -> Result<()> {
         println!("Running end-to-end test...");
         client
             .goto(&format!("http://{host}:{port}/"))
             .await
             .unwrap();
-
-        sleep(Duration::from_secs(60)).await;
 
         let title = client
             .find(Locator::XPath("/html/body/main/h1"))

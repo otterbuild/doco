@@ -8,6 +8,9 @@ repository.workspace = true
 
 [dependencies]
 anyhow = "1.0.86"
+fantoccini = "0.21.2"
 getset = "0.1.2"
+reqwest = { version = "0.12.7", features = ["rustls-tls"] }
 testcontainers = "0.22.0"
+tokio = { version = "1.40.0" }
 typed-builder = "0.20.0"

@@ -82,9 +82,6 @@ jobs:
           load: true
           tags: doco:leptos
 
-      - name: Start chromedriver
-        run: chromedriver --port=4444 &
-
       - name: Run tests
         working-directory: examples/leptos
         run: cargo test --all-features --all-targets
