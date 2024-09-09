@@ -3,11 +3,14 @@
 //! `doco` is a framework and runner for end-to-tests of web applications.
 
 use std::future::Future;
+use std::time::Duration;
 
 pub use anyhow::{Context, Error, Result};
-use testcontainers::core::IntoContainerPort;
+pub use fantoccini::{Client, Locator};
+use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use testcontainers::GenericImage;
+use tokio::time::sleep;
 use typed_builder::TypedBuilder;
 
 use crate::server::Server;
@@ -18,7 +21,7 @@ pub mod server;
 mod test_utils;
 
 pub trait TestCase {
-    fn execute(&self, host: String, port: u16) -> impl Future<Output = Result<()>>;
+    fn execute(&self, client: Client, host: String, port: u16) -> impl Future<Output = Result<()>>;
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, TypedBuilder)]
@@ -31,6 +34,12 @@ impl Doco {
     where
         F: TestCase,
     {
+        let selenium = GenericImage::new("selenium/standalone-firefox", "latest")
+            .with_exposed_port(4444.tcp())
+            .with_wait_for(WaitFor::message_on_stdout("Started Selenium Standalone"))
+            .start()
+            .await?;
+
         let container = GenericImage::new("doco", "leptos")
             .with_exposed_port(self.server.port().tcp())
             .start()
@@ -39,9 +48,37 @@ impl Doco {
         let host = container.get_host().await?;
         let port = container.get_host_port_ipv4(self.server.port()).await?;
 
-        test.execute(host.to_string(), port).await?;
+        let client = fantoccini::ClientBuilder::native()
+            .connect(&format!(
+                "http://{}:{}",
+                selenium.get_host().await?,
+                selenium.get_host_port_ipv4(4444).await?
+            ))
+            .await
+            .expect("failed to connect to WebDriver");
+
+        for _ in 0..10 {
+            if reqwest::Client::new()
+                .get(format!("http://{host}:{port}/"))
+                .send()
+                .await
+                .is_ok()
+            {
+                break;
+            } else {
+                sleep(Duration::from_secs(1)).await;
+            }
+        }
+
+        test.execute(
+            client,
+            container.get_bridge_ip_address().await?.to_string(),
+            self.server.port(),
+        )
+        .await?;
 
         container.stop().await?;
+        selenium.stop().await?;
 
         Ok(())
     }

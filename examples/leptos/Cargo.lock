@@ -667,8 +667,11 @@ name = "doco"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "fantoccini",
  "getset",
+ "reqwest",
  "testcontainers",
+ "tokio",
  "typed-builder 0.20.0",
 ]
 
@@ -1319,13 +1322,11 @@ dependencies = [
  "axum",
  "console_error_panic_hook",
  "doco",
- "fantoccini",
  "http 1.1.0",
  "leptos",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
- "reqwest",
  "thiserror",
  "tokio",
  "tower",
