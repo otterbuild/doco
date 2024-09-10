@@ -1,15 +1,11 @@
-use doco::server::Server;
-use doco::{Client, Doco, Locator, Result, TestCase};
+use doco::{Client, Doco, Locator, Result, Server, TestCase};
 
 struct Leptos;
 
 impl TestCase for Leptos {
-    async fn execute(&self, client: Client, host: String, port: u16) -> Result<()> {
+    async fn execute(&self, client: Client) -> Result<()> {
         println!("Running end-to-end test...");
-        client
-            .goto(&format!("http://{host}:{port}/"))
-            .await
-            .unwrap();
+        client.goto("/").await?;
 
         let title = client
             .find(Locator::XPath("/html/body/main/h1"))

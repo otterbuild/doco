@@ -6,22 +6,24 @@ use std::future::Future;
 use std::time::Duration;
 
 pub use anyhow::{Context, Error, Result};
-pub use fantoccini::{Client, Locator};
+pub use fantoccini::Locator;
 use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use testcontainers::GenericImage;
 use tokio::time::sleep;
 use typed_builder::TypedBuilder;
 
-use crate::server::Server;
+pub use crate::client::Client;
+pub use crate::server::Server;
 
-pub mod server;
+mod client;
+mod server;
 
 #[cfg(test)]
 mod test_utils;
 
 pub trait TestCase {
-    fn execute(&self, client: Client, host: String, port: u16) -> impl Future<Output = Result<()>>;
+    fn execute(&self, client: Client) -> impl Future<Output = Result<()>>;
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, TypedBuilder)]
@@ -57,6 +59,18 @@ impl Doco {
             .await
             .expect("failed to connect to WebDriver");
 
+        let client = Client::builder()
+            .base_url(
+                format!(
+                    "http://{}:{}",
+                    container.get_bridge_ip_address().await?,
+                    self.server.port(),
+                )
+                .parse()?,
+            )
+            .client(client)
+            .build();
+
         for _ in 0..10 {
             if reqwest::Client::new()
                 .get(format!("http://{host}:{port}/"))
@@ -70,12 +84,7 @@ impl Doco {
             }
         }
 
-        test.execute(
-            client,
-            container.get_bridge_ip_address().await?.to_string(),
-            self.server.port(),
-        )
-        .await?;
+        test.execute(client).await?;
 
         container.stop().await?;
         selenium.stop().await?;
