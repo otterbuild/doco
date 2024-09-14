@@ -13,6 +13,12 @@ pub fn main(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // Generate code that initializes the asynchronous runtime, the inventory for tests, and then
     // sets up the given function as the entry point for the program
     let initialization_and_function = quote! {
+        struct Test {
+            function: fn(),
+        }
+
+        inventory::collect!(Test);
+
         static ASYNC_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync::LazyLock::new(|| {
             tokio::runtime::Builder::new_current_thread().enable_all().build().expect("failed to create Tokio runtime")
         });
@@ -45,6 +51,10 @@ pub fn test(_attr: TokenStream, input: TokenStream) -> TokenStream {
                 #test_body
             });
         }
+
+        inventory::submit!(Test {
+            function: #test_name,
+        });
     };
 
     test_function.into()
