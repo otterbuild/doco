@@ -2,95 +2,26 @@
 //!
 //! `doco` is a framework and runner for end-to-tests of web applications.
 
-use std::future::Future;
-use std::time::Duration;
-
 pub use anyhow::{Context, Error, Result};
 pub use fantoccini::Locator;
-use testcontainers::core::{IntoContainerPort, WaitFor};
-use testcontainers::runners::AsyncRunner;
-use testcontainers::GenericImage;
-use tokio::time::sleep;
+use getset::Getters;
 use typed_builder::TypedBuilder;
 
 pub use crate::client::Client;
 pub use crate::server::Server;
+pub use crate::test_runner::*;
 
 mod client;
 mod server;
+mod test_runner;
 
 #[cfg(test)]
 mod test_utils;
 
-pub trait TestCase {
-    fn execute(&self, client: Client) -> impl Future<Output = Result<()>>;
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, TypedBuilder)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Getters, TypedBuilder)]
 pub struct Doco {
+    #[getset(get = "pub")]
     server: Server,
-}
-
-impl Doco {
-    pub async fn run<F>(&self, test: F) -> Result<()>
-    where
-        F: TestCase,
-    {
-        let selenium = GenericImage::new("selenium/standalone-firefox", "latest")
-            .with_exposed_port(4444.tcp())
-            .with_wait_for(WaitFor::message_on_stdout("Started Selenium Standalone"))
-            .start()
-            .await?;
-
-        let container = GenericImage::new("doco", "leptos")
-            .with_exposed_port(self.server.port().tcp())
-            .start()
-            .await?;
-
-        let host = container.get_host().await?;
-        let port = container.get_host_port_ipv4(self.server.port()).await?;
-
-        let client = fantoccini::ClientBuilder::native()
-            .connect(&format!(
-                "http://{}:{}",
-                selenium.get_host().await?,
-                selenium.get_host_port_ipv4(4444).await?
-            ))
-            .await
-            .expect("failed to connect to WebDriver");
-
-        let client = Client::builder()
-            .base_url(
-                format!(
-                    "http://{}:{}",
-                    container.get_bridge_ip_address().await?,
-                    self.server.port(),
-                )
-                .parse()?,
-            )
-            .client(client)
-            .build();
-
-        for _ in 0..10 {
-            if reqwest::Client::new()
-                .get(format!("http://{host}:{port}/"))
-                .send()
-                .await
-                .is_ok()
-            {
-                break;
-            } else {
-                sleep(Duration::from_secs(1)).await;
-            }
-        }
-
-        test.execute(client).await?;
-
-        container.stop().await?;
-        selenium.stop().await?;
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]

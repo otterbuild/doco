@@ -1,4 +1,4 @@
-use doco::{Client, Doco, Locator, Result, Server, TestCase};
+use doco::{Client, Doco, Locator, Result, Server, TestCase, TestRunner};
 
 struct Leptos;
 
@@ -31,5 +31,10 @@ async fn main() {
 
     let doco = Doco::builder().server(server).build();
 
-    doco.run(Leptos).await.unwrap();
+    TestRunner::builder()
+        .doco(doco)
+        .build()
+        .run(Leptos)
+        .await
+        .unwrap();
 }
