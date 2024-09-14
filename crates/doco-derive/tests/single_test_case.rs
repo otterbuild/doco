@@ -1,4 +1,10 @@
+#[doco_derive::main]
+async fn main() {}
+
 #[doco_derive::test]
-fn single_test_case() {
-    assert!("🦕 doco".contains("🦕"));
+async fn single_test_case() {
+    async {
+        assert!("🦕 doco".contains("🦕"));
+    }
+    .await
 }
