@@ -10,16 +10,6 @@ repository.workspace = true
 [lib]
 proc-macro = true
 
-[[test]]
-name = "single_test_case"
-path = "tests/single_test_case.rs"
-harness = false
-
-[[test]]
-name = "multiple_test_cases"
-path = "tests/multiple_test_cases.rs"
-harness = false
-
 [dependencies]
 inventory = "0.3.15"
 quote = "1.0.37"

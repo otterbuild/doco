@@ -2,8 +2,12 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn};
 
-#[proc_macro]
-pub fn init(_input: TokenStream) -> TokenStream {
+#[proc_macro_attribute]
+pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
+    // Parse the function that has been annotated with the `#[doco_derive::main]` attribute
+    let main_fn = parse_macro_input!(input as ItemFn);
+    let main_block = main_fn.block;
+
     // Generate code that initializes the asynchronous runtime, the inventory for tests, and then
     // sets up the given function as the entry point for the program
     let initialization_and_function = quote! {
@@ -18,6 +22,8 @@ pub fn init(_input: TokenStream) -> TokenStream {
         });
 
         fn main() {
+            let doco: doco_types::Doco = #main_block;
+
             for test in inventory::iter::<Test> {
                 (test.function)()
             }
