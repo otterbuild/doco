@@ -16,3 +16,8 @@ repository = "https://github.com/otterbuild/doco.git"
 
 [workspace.metadata.bin]
 leptosfmt = { version = "0.1.30" }
+
+[workspace.dependencies]
+doco-types = { path = "crates/doco-types" }
+getset = "0.1.3"
+typed-builder = "0.20.0"
