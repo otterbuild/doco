@@ -81,6 +81,8 @@ jobs:
           file: examples/leptos/Dockerfile
           load: true
           tags: doco:leptos
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run tests
         working-directory: examples/leptos

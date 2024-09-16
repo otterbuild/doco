@@ -20,6 +20,10 @@ ssr = [
   "leptos_router/ssr",
 ]
 
+[[bin]]
+name = "leptos-ssr"
+path = "src/main.rs"
+
 [[test]]
 name = "e2e"
 path = "e2e/main.rs"

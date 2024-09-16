@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.80.1-slim as builder
+FROM rust:1.80.1-slim AS builder
 
 # Install system-level dependencies
 RUN apt-get update && apt-get install -y \
@@ -39,8 +39,11 @@ COPY examples/leptos/Cargo.toml examples/leptos/Cargo.lock examples/leptos/
 # Cache the example
 RUN cargo build --release
 
-# Copy the source code and build the project
-COPY . .
+# Copy the source code. To optimize the Docker build, we are only selectively
+# copying files that are required by the example. The order of the following
+# statements is determined by their likelihood of changing.
+COPY examples/leptos examples/leptos
+COPY crates/doco crates/doco
 RUN cd examples/leptos && cargo leptos build --release
 
 # Runtime stage
