@@ -3,41 +3,39 @@ use std::time::Duration;
 
 use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
-use testcontainers::GenericImage;
+use testcontainers::{ContainerAsync, GenericImage};
 use tokio::time::sleep;
-use typed_builder::TypedBuilder;
 
-use crate::{Client, Doco};
+use crate::{Client, Doco, Result};
 
 pub trait TestCase {
     fn execute(&self, client: Client) -> impl Future<Output = anyhow::Result<()>>;
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, TypedBuilder)]
+#[derive(Debug)]
 pub struct TestRunner {
-    doco: Doco,
+    client: Client,
+    selenium: ContainerAsync<GenericImage>,
+    server: ContainerAsync<GenericImage>,
+    server_endpoint: String,
 }
 
 impl TestRunner {
-    pub async fn run<F>(&self, test: F) -> anyhow::Result<()>
-    where
-        F: TestCase,
-    {
+    pub async fn init(doco: Doco) -> Result<Self> {
         let selenium = GenericImage::new("selenium/standalone-firefox", "latest")
             .with_exposed_port(4444.tcp())
             .with_wait_for(WaitFor::message_on_stdout("Started Selenium Standalone"))
             .start()
             .await?;
 
-        let container = GenericImage::new("doco", "leptos")
-            .with_exposed_port(self.doco.server().port().tcp())
+        let server = GenericImage::new("doco", "leptos")
+            .with_exposed_port(doco.server().port().tcp())
             .start()
             .await?;
 
-        let host = container.get_host().await?;
-        let port = container
-            .get_host_port_ipv4(self.doco.server().port())
-            .await?;
+        let host = server.get_host().await?;
+        let port = server.get_host_port_ipv4(doco.server().port()).await?;
+        let server_endpoint = format!("http://{host}:{port}/");
 
         let client = fantoccini::ClientBuilder::native()
             .connect(&format!(
@@ -52,17 +50,29 @@ impl TestRunner {
             .base_url(
                 format!(
                     "http://{}:{}",
-                    container.get_bridge_ip_address().await?,
-                    self.doco.server().port(),
+                    server.get_bridge_ip_address().await?,
+                    doco.server().port(),
                 )
                 .parse()?,
             )
             .client(client)
             .build();
 
+        Ok(Self {
+            client,
+            selenium,
+            server,
+            server_endpoint,
+        })
+    }
+
+    pub async fn run<F>(&self, test: F) -> anyhow::Result<()>
+    where
+        F: TestCase,
+    {
         for _ in 0..10 {
             if reqwest::Client::new()
-                .get(format!("http://{host}:{port}/"))
+                .get(&self.server_endpoint)
                 .send()
                 .await
                 .is_ok()
@@ -73,10 +83,10 @@ impl TestRunner {
             }
         }
 
-        test.execute(client).await?;
+        test.execute(self.client.clone()).await?;
 
-        container.stop().await?;
-        selenium.stop().await?;
+        self.server.stop().await?;
+        self.selenium.stop().await?;
 
         Ok(())
     }

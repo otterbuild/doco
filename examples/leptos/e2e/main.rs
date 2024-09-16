@@ -31,10 +31,7 @@ async fn main() {
 
     let doco = Doco::builder().server(server).build();
 
-    TestRunner::builder()
-        .doco(doco)
-        .build()
-        .run(Leptos)
-        .await
-        .unwrap();
+    let test_runner = TestRunner::init(doco).await.unwrap();
+
+    test_runner.run(Leptos).await.unwrap();
 }
