@@ -1,22 +1,30 @@
-use doco::{Client, Doco, Locator, Result, Server, TestCase, TestRunner};
+use std::thread;
 
-struct Leptos;
+use anyhow::anyhow;
+use doco::{Client, Doco, Locator, Result, Server, TestRunner};
+use tokio::runtime::Builder;
 
-impl TestCase for Leptos {
-    async fn execute(&self, client: Client) -> Result<()> {
-        println!("Running end-to-end test...");
-        client.goto("/").await?;
+fn has_title(client: Client) -> Result<()> {
+    thread::spawn(move || {
+        let runtime = Builder::new_current_thread().enable_all().build()?;
 
-        let title = client
-            .find(Locator::XPath("/html/body/main/h1"))
-            .await?
-            .text()
-            .await?;
+        runtime.block_on(async {
+            println!("Running end-to-end test...");
+            client.goto("/").await?;
 
-        assert_eq!("Welcome to Leptos!", title);
+            let title = client
+                .find(Locator::XPath("/html/body/main/h1"))
+                .await?
+                .text()
+                .await?;
 
-        Ok(())
-    }
+            assert_eq!("Welcome to Leptos!", title);
+
+            Ok(())
+        })
+    })
+    .join()
+    .map_err(|_| anyhow!("failed to run test in isolated thread"))?
 }
 
 #[tokio::main]
@@ -33,5 +41,5 @@ async fn main() {
 
     let test_runner = TestRunner::init(doco).await.unwrap();
 
-    test_runner.run(Leptos).await.unwrap();
+    test_runner.run(has_title).await.unwrap();
 }
