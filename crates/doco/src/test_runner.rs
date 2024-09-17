@@ -1,4 +1,3 @@
-use std::future::Future;
 use std::time::Duration;
 
 use testcontainers::core::{IntoContainerPort, WaitFor};
@@ -8,16 +7,12 @@ use tokio::time::sleep;
 
 use crate::{Client, Doco, Result};
 
-pub trait TestCase {
-    fn execute(&self, client: Client) -> impl Future<Output = anyhow::Result<()>>;
-}
-
 #[derive(Debug)]
 pub struct TestRunner {
     client: Client,
-    selenium: ContainerAsync<GenericImage>,
-    server: ContainerAsync<GenericImage>,
     server_endpoint: String,
+    _selenium: ContainerAsync<GenericImage>,
+    _server: ContainerAsync<GenericImage>,
 }
 
 impl TestRunner {
@@ -60,16 +55,13 @@ impl TestRunner {
 
         Ok(Self {
             client,
-            selenium,
-            server,
             server_endpoint,
+            _selenium: selenium,
+            _server: server,
         })
     }
 
-    pub async fn run<F>(&self, test: F) -> anyhow::Result<()>
-    where
-        F: TestCase,
-    {
+    pub async fn run(&self, test: fn(Client) -> Result<()>) -> Result<()> {
         for _ in 0..10 {
             if reqwest::Client::new()
                 .get(&self.server_endpoint)
@@ -83,10 +75,7 @@ impl TestRunner {
             }
         }
 
-        test.execute(self.client.clone()).await?;
-
-        self.server.stop().await?;
-        self.selenium.stop().await?;
+        test(self.client.clone())?;
 
         Ok(())
     }
