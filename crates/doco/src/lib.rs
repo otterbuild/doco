@@ -9,10 +9,12 @@ use typed_builder::TypedBuilder;
 
 pub use crate::client::Client;
 pub use crate::server::Server;
-pub use crate::test_runner::*;
+pub use crate::test_case::TestCase;
+pub use crate::test_runner::TestRunner;
 
 mod client;
 mod server;
+mod test_case;
 mod test_runner;
 
 #[cfg(test)]
