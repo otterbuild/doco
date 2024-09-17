@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{parse_macro_input, ItemFn};
 
 #[proc_macro_attribute]
@@ -11,21 +11,22 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
     // Generate code that initializes the asynchronous runtime, the inventory for tests, and then
     // sets up the given function as the entry point for the program
     let initialization_and_function = quote! {
-        struct Test {
-            function: fn(),
+        #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+        struct TestCase {
+            pub function: fn(doco::Client) -> doco::Result<()>,
         }
 
-        inventory::collect!(Test);
+        doco::inventory::collect!(TestCase);
 
-        static ASYNC_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync::LazyLock::new(|| {
-            tokio::runtime::Builder::new_current_thread().enable_all().build().expect("failed to create Tokio runtime")
-        });
+        #[tokio::main]
+        async fn main() {
+            let doco: doco::Doco = #main_block;
 
-        fn main() {
-            let doco: doco_types::Doco = #main_block;
+            let test_runner = doco::TestRunner::init(doco).await.expect("failed to initialize the test runner");
 
-            for test in inventory::iter::<Test> {
-                (test.function)()
+            for test in doco::inventory::iter::<TestCase> {
+                // TODO: Collect results, report them, and remove the `expect` statement
+                test_runner.run(test.function).await.expect("failed to run test");
             }
         }
     };
@@ -37,23 +38,28 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn test(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // Parse the function that has been annotated with the `#[doco_derive::test]` attribute
     let input_fn = parse_macro_input!(input as ItemFn);
+    let input_fn_name = &input_fn.sig.ident;
 
     // Extract the function name, arguments, and body for the final test function
-    let test_name = input_fn.sig.ident;
-    let test_args = input_fn.sig.inputs;
-    let test_body = input_fn.block;
+    let test_fn_name = format_ident!("{}_test", &input_fn_name);
+    let test_args = &input_fn.sig.inputs;
 
     // Generate a test function that executes the test block inside doco's asynchronous runtime
     let test_function = quote! {
-        fn #test_name(#test_args) {
-            ASYNC_RUNTIME.block_on(async {
-                #test_body
-            });
+        #input_fn
+
+        fn #test_fn_name(#test_args) -> doco::Result<()> {
+            std::thread::spawn(move || {
+                let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+
+                runtime.block_on(async {
+                    #input_fn_name(client).await
+                })
+            })
+            .join().map_err(|_| doco::anyhow!("failed to run test in isolated thread"))?
         }
 
-        inventory::submit!(Test {
-            function: #test_name,
-        });
+        doco::inventory::submit!(crate::TestCase { function: #test_fn_name });
     };
 
     test_function.into()

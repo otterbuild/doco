@@ -318,8 +318,10 @@ name = "doco"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "doco-derive",
  "fantoccini",
  "getset",
+ "inventory",
  "reqwest",
  "testcontainers",
  "tokio",
@@ -330,10 +332,8 @@ dependencies = [
 name = "doco-derive"
 version = "0.0.0"
 dependencies = [
- "inventory",
  "quote",
- "syn 2.0.77",
- "tokio",
+ "syn",
 ]
 
 [[package]]

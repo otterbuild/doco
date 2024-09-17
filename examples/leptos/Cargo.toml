@@ -65,7 +65,6 @@ tracing = { version = "0.1.40", optional = true }
 http = "1.1.0"
 
 [dev-dependencies]
-anyhow = "1.0.89"
 assert_cmd = "2.0.16"
 doco = { path = "../../crates/doco" }
-tokio = { version = "1.40.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread"] }

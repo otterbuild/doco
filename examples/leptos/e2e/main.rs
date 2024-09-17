@@ -1,46 +1,28 @@
-use std::thread;
+use doco::{Client, Doco, Locator, Result, Server};
 
-use anyhow::anyhow;
-use doco::{Client, Doco, Locator, Result, Server, TestCase, TestRunner};
-use tokio::runtime::Builder;
+#[doco::test]
+async fn has_title(client: Client) -> Result<()> {
+    println!("Running end-to-end test...");
+    client.goto("/").await?;
 
-fn has_title(client: Client) -> Result<()> {
-    thread::spawn(move || {
-        let runtime = Builder::new_current_thread().enable_all().build()?;
+    let title = client
+        .find(Locator::XPath("/html/body/main/h1"))
+        .await?
+        .text()
+        .await?;
 
-        runtime.block_on(async {
-            println!("Running end-to-end test...");
-            client.goto("/").await?;
+    assert_eq!("Welcome to Leptos!", title);
 
-            let title = client
-                .find(Locator::XPath("/html/body/main/h1"))
-                .await?
-                .text()
-                .await?;
-
-            assert_eq!("Welcome to Leptos!", title);
-
-            Ok(())
-        })
-    })
-    .join()
-    .map_err(|_| anyhow!("failed to run test in isolated thread"))?
+    Ok(())
 }
 
-#[tokio::main]
-async fn main() {
-    println!("Running end-to-end tests with doco...");
-
+#[doco::main]
+async fn main() -> Doco {
     let server = Server::builder()
         .image("doco")
         .tag("leptos")
         .port(8080)
         .build();
 
-    let doco = Doco::builder().server(server).build();
-
-    let test_runner = TestRunner::init(doco).await.unwrap();
-    let test_case = TestCase::new(has_title);
-
-    test_runner.run(test_case).await.unwrap();
+    Doco::builder().server(server).build()
 }
