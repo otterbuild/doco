@@ -25,6 +25,7 @@ WORKDIR /app
 
 # Create an empty Rust crate
 RUN cargo new --lib --vcs none crates/doco \
+    && cargo new --lib --vcs none crates/doco-derive \
     && cargo new --lib --vcs none --name leptos-ssr examples/leptos
 
 # Copy the Cargo.toml and Cargo.lock
@@ -43,7 +44,7 @@ RUN cargo build --release
 # copying files that are required by the example. The order of the following
 # statements is determined by their likelihood of changing.
 COPY examples/leptos examples/leptos
-COPY crates/doco crates/doco
+COPY crates crates
 RUN cd examples/leptos && cargo leptos build --release
 
 # Runtime stage

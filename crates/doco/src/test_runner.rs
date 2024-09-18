@@ -5,7 +5,7 @@ use testcontainers::runners::AsyncRunner;
 use testcontainers::{ContainerAsync, GenericImage};
 use tokio::time::sleep;
 
-use crate::{Client, Doco, Result, TestCase};
+use crate::{Client, Doco, Result};
 
 #[derive(Debug)]
 pub struct TestRunner {
@@ -61,7 +61,7 @@ impl TestRunner {
         })
     }
 
-    pub async fn run(&self, test: TestCase) -> Result<()> {
+    pub async fn run(&self, test: fn(Client) -> Result<()>) -> Result<()> {
         for _ in 0..10 {
             if reqwest::Client::new()
                 .get(&self.server_endpoint)
@@ -75,7 +75,7 @@ impl TestRunner {
             }
         }
 
-        (test.function())(self.client.clone())?;
+        test(self.client.clone())?;
 
         Ok(())
     }

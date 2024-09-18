@@ -318,12 +318,22 @@ name = "doco"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "doco-derive",
  "fantoccini",
  "getset",
+ "inventory",
  "reqwest",
  "testcontainers",
  "tokio",
  "typed-builder",
+]
+
+[[package]]
+name = "doco-derive"
+version = "0.0.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -810,6 +820,12 @@ dependencies = [
  "hashbrown 0.14.5",
  "serde",
 ]
+
+[[package]]
+name = "inventory"
+version = "0.3.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f958d3d68f4167080a18141e10381e7634563984a537f2a49a30fd8e53ac5767"
 
 [[package]]
 name = "ipnet"

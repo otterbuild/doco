@@ -667,12 +667,22 @@ name = "doco"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "doco-derive",
  "fantoccini",
  "getset",
+ "inventory",
  "reqwest",
  "testcontainers",
  "tokio",
  "typed-builder 0.20.0",
+]
+
+[[package]]
+name = "doco-derive"
+version = "0.0.0"
+dependencies = [
+ "quote",
+ "syn 2.0.77",
 ]
 
 [[package]]
@@ -1318,7 +1328,6 @@ dependencies = [
 name = "leptos-ssr"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "assert_cmd",
  "axum",
  "console_error_panic_hook",

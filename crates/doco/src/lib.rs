@@ -2,19 +2,19 @@
 //!
 //! `doco` is a framework and runner for end-to-tests of web applications.
 
-pub use anyhow::{Context, Error, Result};
+pub use anyhow::{anyhow, Context, Error, Result};
+pub use doco_derive::{main, test};
 pub use fantoccini::Locator;
 use getset::Getters;
+pub use inventory;
 use typed_builder::TypedBuilder;
 
 pub use crate::client::Client;
 pub use crate::server::Server;
-pub use crate::test_case::TestCase;
 pub use crate::test_runner::TestRunner;
 
 mod client;
 mod server;
-mod test_case;
 mod test_runner;
 
 #[cfg(test)]
@@ -30,7 +30,7 @@ pub struct Doco {
 mod tests {
     use crate::test_utils::*;
 
-    use super::*;
+    use super::Doco;
 
     #[test]
     fn trait_send() {
