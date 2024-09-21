@@ -17,6 +17,8 @@ pub struct TestRunner {
 
 impl TestRunner {
     pub async fn init(doco: Doco) -> Result<Self> {
+        println!("Initializing ephemeral test environment...");
+
         let selenium = GenericImage::new("selenium/standalone-firefox", "latest")
             .with_exposed_port(4444.tcp())
             .with_wait_for(WaitFor::message_on_stdout("Started Selenium Standalone"))
@@ -61,7 +63,9 @@ impl TestRunner {
         })
     }
 
-    pub async fn run(&self, test: fn(Client) -> Result<()>) -> Result<()> {
+    pub async fn run(&self, name: &str, test: fn(Client) -> Result<()>) -> Result<()> {
+        println!("Running tests...\n");
+
         for _ in 0..10 {
             if reqwest::Client::new()
                 .get(&self.server_endpoint)
@@ -75,7 +79,10 @@ impl TestRunner {
             }
         }
 
+        println!("{}...", name);
         test(self.client.clone())?;
+
+        println!("\nDone.");
 
         Ok(())
     }

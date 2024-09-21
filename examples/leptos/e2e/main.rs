@@ -2,7 +2,6 @@ use doco::{Client, Doco, Locator, Result, Server};
 
 #[doco::test]
 async fn has_title(client: Client) -> Result<()> {
-    println!("Running end-to-end test...");
     client.goto("/").await?;
 
     let title = client
