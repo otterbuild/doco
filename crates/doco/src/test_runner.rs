@@ -9,10 +9,8 @@ use crate::{Client, Doco, Result};
 
 #[derive(Debug)]
 pub struct TestRunner {
-    client: Client,
-    server_endpoint: String,
-    _selenium: ContainerAsync<GenericImage>,
-    _server: ContainerAsync<GenericImage>,
+    doco: Doco,
+    selenium: ContainerAsync<GenericImage>,
 }
 
 impl TestRunner {
@@ -25,20 +23,26 @@ impl TestRunner {
             .start()
             .await?;
 
+        Ok(Self { doco, selenium })
+    }
+
+    pub async fn run(&self, name: &str, test: fn(Client) -> Result<()>) -> Result<()> {
+        println!("Running tests...\n");
+
         let server = GenericImage::new("doco", "leptos")
-            .with_exposed_port(doco.server().port().tcp())
+            .with_exposed_port(self.doco.server().port().tcp())
             .start()
             .await?;
 
         let host = server.get_host().await?;
-        let port = server.get_host_port_ipv4(doco.server().port()).await?;
+        let port = server.get_host_port_ipv4(self.doco.server().port()).await?;
         let server_endpoint = format!("http://{host}:{port}/");
 
         let client = fantoccini::ClientBuilder::native()
             .connect(&format!(
                 "http://{}:{}",
-                selenium.get_host().await?,
-                selenium.get_host_port_ipv4(4444).await?
+                self.selenium.get_host().await?,
+                self.selenium.get_host_port_ipv4(4444).await?
             ))
             .await
             .expect("failed to connect to WebDriver");
@@ -48,27 +52,16 @@ impl TestRunner {
                 format!(
                     "http://{}:{}",
                     server.get_bridge_ip_address().await?,
-                    doco.server().port(),
+                    self.doco.server().port(),
                 )
                 .parse()?,
             )
             .client(client)
             .build();
 
-        Ok(Self {
-            client,
-            server_endpoint,
-            _selenium: selenium,
-            _server: server,
-        })
-    }
-
-    pub async fn run(&self, name: &str, test: fn(Client) -> Result<()>) -> Result<()> {
-        println!("Running tests...\n");
-
         for _ in 0..10 {
             if reqwest::Client::new()
-                .get(&self.server_endpoint)
+                .get(&server_endpoint)
                 .send()
                 .await
                 .is_ok()
@@ -80,7 +73,7 @@ impl TestRunner {
         }
 
         println!("{}...", name);
-        test(self.client.clone())?;
+        test(client)?;
 
         println!("\nDone.");
 
