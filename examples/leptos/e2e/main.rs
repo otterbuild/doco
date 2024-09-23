@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use doco::{Client, Doco, Locator, Result, Server};
+use tokio::time::sleep;
 
 #[doco::test]
 async fn has_title(client: Client) -> Result<()> {
@@ -11,6 +14,28 @@ async fn has_title(client: Client) -> Result<()> {
         .await?;
 
     assert_eq!("Welcome to Leptos!", title);
+
+    Ok(())
+}
+
+#[doco::test]
+async fn clicking_button_increases_counter(client: Client) -> Result<()> {
+    client.goto("/").await?;
+
+    let button = client
+        .find(Locator::XPath("/html/body/main/button"))
+        .await?;
+
+    let before = button.text().await?;
+    assert_eq!("Click Me: 0", before);
+
+    button.click().await?;
+
+    // Wait for the button to update
+    sleep(Duration::from_secs(1)).await;
+
+    let after = button.text().await?;
+    assert_eq!("Click Me: 1", after);
 
     Ok(())
 }

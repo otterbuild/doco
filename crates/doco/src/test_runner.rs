@@ -27,8 +27,6 @@ impl TestRunner {
     }
 
     pub async fn run(&self, name: &str, test: fn(Client) -> Result<()>) -> Result<()> {
-        println!("Running tests...\n");
-
         let server = GenericImage::new("doco", "leptos")
             .with_exposed_port(self.doco.server().port().tcp())
             .start()
@@ -74,8 +72,6 @@ impl TestRunner {
 
         println!("{}...", name);
         test(client)?;
-
-        println!("\nDone.");
 
         Ok(())
     }
