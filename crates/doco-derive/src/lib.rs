@@ -24,11 +24,16 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
             let doco: doco::Doco = #main_block;
 
             let test_runner = doco::TestRunner::init(doco).await.expect("failed to initialize the test runner");
+            let tests = doco::inventory::iter::<TestCase>.into_iter().count();
+
+            println!("Running {} tests...\n", tests);
 
             for test in doco::inventory::iter::<TestCase> {
                 // TODO: Collect results, report them, and remove the `expect` statement
                 test_runner.run(test.name, test.function).await.expect("failed to run test");
             }
+
+            println!("\nDone.");
         }
     };
 
