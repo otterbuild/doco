@@ -1,5 +1,5 @@
 ---
-name: Example / Leptos
+name: Example / axum
 
 "on":
   push:
@@ -31,7 +31,7 @@ jobs:
           files: |
             .github/workflows/axum.yml
             crates/**/*
-            examples/leptos/**/*
+            examples/axum-postgres/**/*
 
       - name: Print changed files
         run: |
@@ -53,11 +53,11 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: leptos-1.81.0
-          workspaces: examples/leptos -> target
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
       - name: Run Clippy
-        working-directory: examples/leptos
+        working-directory: examples/axum-postgres
         run: cargo clippy --all-features --all-targets -- -D warnings
 
   style:
@@ -74,11 +74,11 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: leptos-1.81.0
-          workspaces: examples/leptos -> target
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
       - name: Run rustfmt
-        working-directory: examples/leptos
+        working-directory: examples/axum-postgres
         run: cargo fmt --check
 
   test:
@@ -98,33 +98,19 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: leptos-1.81.0
-          cache-directories: ".bin"
-          workspaces: examples/leptos -> target
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: Install cargo-run-bin
-        working-directory: examples/leptos
-        run: cargo install cargo-run-bin
-
-      - name: Install cargo binaries
-        working-directory: examples/leptos
-        run: |
-          cargo bin --install
-          cargo bin --sync-aliases
-
-      - name: Build Docker image for Leptos app
+      - name: Build Docker image for axum app
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: examples/leptos/Dockerfile
+          file: examples/axum-postgres/Dockerfile
           load: true
-          tags: doco:leptos
+          tags: doco:axum-postgres
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Run tests
-        working-directory: examples/leptos
+        working-directory: examples/axum-postgres
         run: cargo test --all-features --all-targets

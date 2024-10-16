@@ -85,12 +85,6 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
-    container:
-      # Code coverage is run inside the tarpaulin container with elevated
-      # privileges so that it can instrument the code and collect coverage data.
-      image: xd009642/tarpaulin:0.31.2
-      options: --security-opt seccomp=unconfined
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -99,6 +93,12 @@ jobs:
         uses: swatinem/rust-cache@v2.7.5
         with:
           prefix-key: tarpaulin-1.81.0
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: (Re)Install cargo-tarpaulin
+        run: cargo binstall --force --no-confirm cargo-tarpaulin
 
       - name: Run tests with test coverage
         run: |
