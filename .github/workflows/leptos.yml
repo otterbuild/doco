@@ -57,7 +57,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: leptos-1.81.0
+          prefix-key: leptos-1.82.0
           cache-directories: ".bin"
           workspaces: examples/leptos -> target
 
