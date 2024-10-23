@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.81.0 AS builder
+FROM rust:1.82.0 AS builder
 
 # Install system-level dependencies
 RUN apt-get update && apt-get install -y \
