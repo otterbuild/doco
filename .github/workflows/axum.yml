@@ -1,5 +1,5 @@
 ---
-name: Rust
+name: Example / axum
 
 "on":
   push:
@@ -29,10 +29,9 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            .github/workflows/rust.yml
-            **/*.rs
-            **/*.toml
-            !examples/**
+            .github/workflows/axum.yml
+            crates/**/*
+            examples/axum-postgres/**/*
 
       - name: Print changed files
         run: |
@@ -54,9 +53,11 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: cargo-1.82.0
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
       - name: Run Clippy
+        working-directory: examples/axum-postgres
         run: cargo clippy --all-features --all-targets -- -D warnings
 
   style:
@@ -73,9 +74,11 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: cargo-1.82.0
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
       - name: Run rustfmt
+        working-directory: examples/axum-postgres
         run: cargo fmt --check
 
   test:
@@ -89,35 +92,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: tarpaulin-1.82.0
+          prefix-key: axum-postgres-1.81.0
+          workspaces: examples/axum-postgres -> target
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: (Re)Install cargo-tarpaulin
-        run: cargo binstall --force --no-confirm cargo-tarpaulin
-
-      - name: Run tests with test coverage
-        run: |
-          cargo tarpaulin \
-            --all-features \
-            --engine llvm \
-            --out Xml \
-            --skip-clean \
-            --timeout 120 \
-            --verbose \
-            --workspace
-
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4
+      - name: Build Docker image for axum app
+        uses: docker/build-push-action@v6
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          context: .
+          file: examples/axum-postgres/Dockerfile
+          load: true
+          tags: doco:axum-postgres
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-coverage-report
-          path: cobertura.xml
+      - name: Run tests
+        working-directory: examples/axum-postgres
+        run: cargo test --all-features --all-targets

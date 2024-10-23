@@ -1,5 +1,5 @@
 ---
-name: Leptos
+name: Example / Leptos
 
 "on":
   push:
@@ -29,10 +29,9 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            .github/workflows/leptos.yml
-            examples/leptos/**/*.rs
-            examples/leptos/**/*.toml
-            examples/leptos/Dockerfile
+            .github/workflows/axum.yml
+            crates/**/*
+            examples/leptos/**/*
 
       - name: Print changed files
         run: |
@@ -40,8 +39,50 @@ jobs:
             echo "$file"
           done
 
+  lint:
+    name: Lint Rust code
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache build artifacts
+        uses: swatinem/rust-cache@v2.7.5
+        with:
+          prefix-key: leptos-1.81.0
+          workspaces: examples/leptos -> target
+
+      - name: Run Clippy
+        working-directory: examples/leptos
+        run: cargo clippy --all-features --all-targets -- -D warnings
+
+  style:
+    name: Check Rust style
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache build artifacts
+        uses: swatinem/rust-cache@v2.7.5
+        with:
+          prefix-key: leptos-1.81.0
+          workspaces: examples/leptos -> target
+
+      - name: Run rustfmt
+        working-directory: examples/leptos
+        run: cargo fmt --check
+
   test:
-    name: Run Leptos tests
+    name: Run Rust tests
     runs-on: ubuntu-latest
 
     needs: detect-changes
