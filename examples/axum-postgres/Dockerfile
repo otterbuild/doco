@@ -22,6 +22,10 @@ WORKDIR /app
 # Copy server binary
 COPY --from=builder /app/examples/axum-postgres/target/release/axum-postgres server
 
+# Configure a health check for the server
+HEALTHCHECK CMD curl --fail http://localhost:3000 || exit 1
+
+# Configure the axum server
 ENV RUST_BACKTRACE=full
 EXPOSE 3000
 

@@ -1,15 +1,14 @@
 //! Server for the web application that is being tested
 
 use getset::{CopyGetters, Getters};
+use testcontainers::core::WaitFor;
 use typed_builder::TypedBuilder;
 
 /// Server for the web application that is being tested
 ///
 /// The `Server` struct configures the server that is being tested. Doco runs the server as a Docker
 /// container, using a prebuilt image.
-#[derive(
-    Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, CopyGetters, Getters, TypedBuilder,
-)]
+#[derive(Clone, Debug, CopyGetters, Getters, TypedBuilder)]
 pub struct Server {
     /// The name of the Docker image for the server, e.g. `rust`
     #[builder(setter(into))]
@@ -24,6 +23,11 @@ pub struct Server {
     /// The port that the server listens on, e.g. `8080`
     #[getset(get_copy = "pub")]
     port: u16,
+
+    /// An optional condition to wait until the server has properly started
+    #[builder(default, setter(into))]
+    #[getset(get = "pub")]
+    wait: Option<WaitFor>,
 }
 
 #[cfg(test)]
