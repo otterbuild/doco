@@ -1,3 +1,5 @@
+//! Test runner for Doco's end-to-end tests
+
 use std::time::Duration;
 
 use anyhow::Context;
@@ -8,15 +10,36 @@ use tokio::time::sleep;
 
 use crate::{Client, Doco, Result};
 
+/// The host name for Docker containers to access the host machine
+///
+/// Docker containers can access the host using this internal hostname. The hostname is
+/// automatically set on macOS and Windows hosts, but on Linux hosts it must be set explicitly by
+/// Doco.
 const DOCKER_HOST: &str = "host.docker.internal";
 
+/// Test runner for Doco's end-to-end tests
+///
+/// The `TestRunner` is responsible for executing each test in an isolated, ephemeral environment.
+/// It starts Selenium in a container, configures the WebDriver [`Client`] to connect to Selenium,
+/// and then runs each test against a clean instance of the server and its services.
+///
+/// It should not be necessary to use this struct directly. Instead, use the [`doco::main`] and
+/// [`doco::test`] macros to automatically set up the test runner, collect all tests, and pass them
+/// to the runner.
 #[derive(Debug)]
 pub struct TestRunner {
+    /// The Doco configuration to use for the tests
     doco: Doco,
+
+    /// The running Selenium container to which the WebDriver client connects
     selenium: ContainerAsync<GenericImage>,
 }
 
 impl TestRunner {
+    /// Initialize the test runner with the given Doco configuration
+    ///
+    /// This method starts the Selenium container and returns a new `TestRunner` instance. Since
+    /// starting the container can fail, this method returns a `Result` that must be handled.
     pub async fn init(doco: Doco) -> Result<Self> {
         println!("Initializing ephemeral test environment...");
 
@@ -25,6 +48,15 @@ impl TestRunner {
         Ok(Self { doco, selenium })
     }
 
+    /// Run the given test in the ephemeral environment
+    ///
+    /// This method executes a test in a clean, ephemeral environment. First, it starts any
+    /// auxiliary services like databases and waits for them to be ready. Then, it starts the
+    /// server, configures the WebDriver [`Client`], and calls the test function.
+    ///
+    /// It should not be necessary to use this struct directly. Instead, use the [`doco::main`] and
+    /// [`doco::test`] macros to automatically set up the test runner, collect all tests, and pass
+    /// them to the runner.
     pub async fn run(&self, name: &str, test: fn(Client) -> Result<()>) -> Result<()> {
         let mut services = Vec::with_capacity(self.doco.services().len());
 
@@ -98,6 +130,11 @@ impl TestRunner {
     }
 }
 
+/// Start the Selenium container
+///
+/// This function starts the Selenium container, waits for it to be ready, and then returns a
+/// reference to the running container. For compatibility between macOS, Linux, and Windows, the
+/// [`DOCKER_HOST`] is set explicitly on all platforms.
 async fn start_selenium() -> Result<ContainerAsync<GenericImage>> {
     GenericImage::new("selenium/standalone-firefox", "latest")
         .with_exposed_port(4444.tcp())

@@ -1,7 +1,39 @@
+//! Derive macros for the Doco testing framework
+//!
+//! Doco is a test runner and library for writing end-to-tests of web applications. It runs tests
+//! in isolated, ephemeral environments. This crate provides procedural macros to make it easier to
+//! set up the test runner, collect all tests, and then run them individually in isolated, ephemeral
+//! environments.
+//!
+//! It is not recommended to use this crate directly. Instead, use the [`doco`] crate that
+//! re-exports the macros from this crate.
+
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, ItemFn};
 
+/// Collect and run the end-to-end tests with Doco
+///
+/// This macro makes it very easy to use the [`doco`] testing framework. It collects all tests that
+/// are annotated with the [`doco::test`] macro, initializes the test runner, and then runs each
+/// test in an isolated, ephemeral environment.
+///
+/// # Example
+///
+/// ```no_run
+/// use doco::{Doco, Server};
+///
+/// #[doco::main]
+/// async fn main() -> Doco {
+///     let server = Server::builder()
+///         .image("crccheck/hello-world")
+///         .tag("v1.0.0")
+///         .port(8000)
+///         .build();
+///
+///     Doco::builder().server(server).build()
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
     // Parse the function that has been annotated with the `#[doco_derive::main]` attribute
@@ -40,6 +72,28 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
     initialization_and_function.into()
 }
 
+/// Annotate an end-to-end test to be run with Doco
+///
+/// The `#[doco::test]` attribute is used to annotate an asynchronous test function that should be
+/// executed by Doco as an end-to-end test. The test function is passed a [`doco::Client`] that can
+/// be used to interact with the web application, and it should return a [`doco::Result`].
+///
+/// # Example
+///
+/// ```no_run
+/// use doco::{Client, Result};
+///
+/// #[doco::test]
+/// async fn visit_root_path(client: Client) -> Result<()> {
+///     client.goto("/").await?;
+///
+///     let body = client.source().await?;
+///
+///     assert!(body.contains("Hello World"));
+///
+///     Ok(())
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn test(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // Parse the function that has been annotated with the `#[doco_derive::test]` attribute
