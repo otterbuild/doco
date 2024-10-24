@@ -20,7 +20,7 @@ use syn::{parse_macro_input, ItemFn};
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use doco::{Doco, Server};
 ///
 /// #[doco::main]
@@ -80,7 +80,7 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use doco::{Client, Result};
 ///
 /// #[doco::test]

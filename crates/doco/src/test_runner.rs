@@ -1,12 +1,9 @@
 //! Test runner for Doco's end-to-end tests
 
-use std::time::Duration;
-
 use anyhow::Context;
 use testcontainers::core::{Host, IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use testcontainers::{ContainerAsync, GenericImage, ImageExt};
-use tokio::time::sleep;
 
 use crate::{Client, Doco, Result};
 
@@ -61,9 +58,13 @@ impl TestRunner {
         let mut services = Vec::with_capacity(self.doco.services().len());
 
         let mut server = GenericImage::new(self.doco.server().image(), self.doco.server().tag())
-            .with_exposed_port(self.doco.server().port().tcp())
-            .with_wait_for(WaitFor::seconds(5))
-            .with_host(DOCKER_HOST, Host::HostGateway);
+            .with_exposed_port(self.doco.server().port().tcp());
+
+        if let Some(wait) = self.doco.server.wait() {
+            server = server.with_wait_for(wait.clone());
+        }
+
+        let mut server = server.with_host(DOCKER_HOST, Host::HostGateway);
 
         for service in self.doco.services() {
             let mut image = GenericImage::new(service.image(), service.tag());
@@ -89,12 +90,7 @@ impl TestRunner {
         }
 
         let server = server.start().await?;
-        let stdout = String::from_utf8(server.stderr_to_vec().await?)?;
-        println!("{stdout}");
-
-        let host = server.get_host().await?;
         let port = server.get_host_port_ipv4(self.doco.server().port()).await?;
-        let server_endpoint = format!("http://{host}:{port}/");
 
         let client = fantoccini::ClientBuilder::native()
             .connect(&format!(
@@ -109,19 +105,6 @@ impl TestRunner {
             .base_url(format!("http://{DOCKER_HOST}:{port}").parse()?)
             .client(client)
             .build();
-
-        for _ in 0..10 {
-            if reqwest::Client::new()
-                .get(&server_endpoint)
-                .send()
-                .await
-                .is_ok()
-            {
-                break;
-            } else {
-                sleep(Duration::from_secs(1)).await;
-            }
-        }
 
         println!("{}...", name);
         test(client)?;

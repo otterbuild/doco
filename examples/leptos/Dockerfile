@@ -58,6 +58,9 @@ COPY --from=builder /app/examples/leptos/target/release/leptos-ssr server
 # Copy WASM module, CSS stylesheets, and other static files
 COPY --from=builder /app/examples/leptos/target/leptos site
 
+# Configure a health check for the server
+HEALTHCHECK CMD curl --fail http://localhost:8080 || exit 1
+
 # Configure the Leptos app
 ENV RUST_LOG="info"
 ENV LEPTOS_SITE_ADDR="0.0.0.0:8080"
