@@ -649,7 +649,7 @@ dependencies = [
 
 [[package]]
 name = "doco"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "doco-derive",
@@ -664,7 +664,7 @@ dependencies = [
 
 [[package]]
 name = "doco-derive"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "quote",
  "syn 2.0.77",
@@ -1334,7 +1334,7 @@ dependencies = [
 
 [[package]]
 name = "leptos-ssr"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "axum",
