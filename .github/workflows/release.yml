@@ -14,7 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Publish crate
-        run: cargo publish -v --all-features
+      - name: Publish doco-derive
+        run: cargo publish -v --all-features -p doco-derive
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
+
+      - name: Publish doco
+        run: cargo publish -v --all-features -p doco
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
