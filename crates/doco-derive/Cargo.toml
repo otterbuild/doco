@@ -8,6 +8,8 @@ description.workspace = true
 homepage.workspace = true
 repository.workspace = true
 
+readme = "../../README.md"
+
 [lib]
 proc-macro = true
 
