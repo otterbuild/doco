@@ -9,7 +9,7 @@ repository.workspace = true
 
 [dependencies]
 anyhow = "1.0.86"
-doco-derive = { path = "../doco-derive" }
+doco-derive = { path = "../doco-derive", version = "0.1.0" }
 fantoccini = "0.21.2"
 getset = "0.1.2"
 inventory = "0.3.15"
