@@ -105,6 +105,7 @@ jobs:
           cargo tarpaulin \
             --all-features \
             --engine llvm \
+            --exclude doco-derive \
             --out Xml \
             --skip-clean \
             --timeout 120 \
