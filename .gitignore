@@ -16,3 +16,6 @@ target/
 
 # Dependencies and build artifacts for npm-based tools
 node_modules/
+
+# Code coverage reports
+cobertura.xml
