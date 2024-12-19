@@ -46,8 +46,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run yamllint
-        uses: actionshub/yamllint@v1.8.3
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +yaml-lint
 
   style:
     name: Check YAML style
@@ -60,8 +68,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: prettier
-        uses: creyD/prettier_action@v4.3
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
         with:
-          dry: true
-          prettier_options: "--check **/*.{yml,yaml}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +yaml-format

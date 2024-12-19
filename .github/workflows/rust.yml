@@ -8,10 +8,6 @@ name: Rust
   pull_request:
   workflow_dispatch:
 
-env:
-  CARGO_INCREMENTAL: 0
-  CARGO_PROFILE_TEST_DEBUG: 0
-
 jobs:
   detect-changes:
     name: Detect changes
@@ -40,6 +36,116 @@ jobs:
             echo "$file"
           done
 
+  deps-latest:
+    name: Test latest versions
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run tests with latest dependency versions
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-deps-latest
+
+  deps-minimal:
+    name: Test minimal dependencies
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-deps-minimal
+
+  doc:
+    name: Compile documentation
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-doc
+
+  features:
+    name: Test features
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-deps-latest
+
+  format:
+    name: Check Rust style
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-format
+
   lint:
     name: Lint Rust code
     runs-on: ubuntu-latest
@@ -51,16 +157,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache build artifacts
-        uses: swatinem/rust-cache@v2.7.5
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
         with:
-          prefix-key: cargo-1.83.0
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
 
-      - name: Run Clippy
-        run: cargo clippy --all-features --all-targets -- -D warnings
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-lint
 
-  style:
-    name: Check Rust style
+  msrv:
+    name: Check MSRV
     runs-on: ubuntu-latest
 
     needs: detect-changes
@@ -70,13 +179,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache build artifacts
-        uses: swatinem/rust-cache@v2.7.5
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
         with:
-          prefix-key: cargo-1.83.0
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
 
-      - name: Run rustfmt
-        run: cargo fmt --check
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --ci +rust-msrv
 
   test:
     name: Run Rust tests
@@ -89,31 +201,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache build artifacts
-        uses: swatinem/rust-cache@v2.7.5
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
         with:
-          prefix-key: tarpaulin-1.83.0
-
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: (Re)Install cargo-tarpaulin
-        run: cargo binstall --force --no-confirm cargo-tarpaulin
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
 
       - name: Run tests with test coverage
-        run: |
-          cargo tarpaulin \
-            --all-features \
-            --engine llvm \
-            --exclude doco-derive \
-            --out Xml \
-            --skip-clean \
-            --timeout 120 \
-            --verbose \
-            --workspace
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: earthly --allow-privileged --strict +rust-test --SAVE_REPORT=yes
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
