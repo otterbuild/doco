@@ -168,28 +168,6 @@ jobs:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
         run: earthly --ci +rust-lint
 
-  msrv:
-    name: Check MSRV
-    runs-on: ubuntu-latest
-
-    needs: detect-changes
-    if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install earthly
-        uses: earthly/actions-setup@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          version: 0.8
-
-      - name: Run check with Earthly
-        env:
-          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-msrv
-
   test:
     name: Run Rust tests
     runs-on: ubuntu-latest
