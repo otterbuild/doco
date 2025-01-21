@@ -40,12 +40,23 @@ jobs:
     name: Test latest versions
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -56,18 +67,29 @@ jobs:
       - name: Run tests with latest dependency versions
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-deps-latest
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-deps-latest +rust-deps-latest
 
   deps-minimal:
     name: Test minimal dependencies
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -78,18 +100,29 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-deps-minimal
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-deps-minimal +rust-deps-minimal
 
   doc:
     name: Compile documentation
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -100,18 +133,29 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-doc
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-doc +rust-doc
 
   features:
     name: Test features
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -122,18 +166,29 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-deps-latest
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-features +rust-features
 
   format:
     name: Check Rust style
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -144,18 +199,29 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-format
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-format +rust-format
 
   lint:
     name: Lint Rust code
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: write
+      contents: read
+
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -166,11 +232,15 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --ci +rust-lint
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-lint +rust-lint
 
   test:
     name: Run Rust tests
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
 
     needs: detect-changes
     if: needs.detect-changes.outputs.any_changed == 'true' || github.event_name == 'workflow_dispatch'
@@ -178,6 +248,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install earthly
         uses: earthly/actions-setup@v1
@@ -188,7 +265,7 @@ jobs:
       - name: Run tests with test coverage
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: earthly --allow-privileged --strict +rust-test --SAVE_REPORT=yes
+        run: earthly --allow-privileged --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:rust-test --strict +rust-test --SAVE_REPORT=yes
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5
