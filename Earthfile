@@ -1,6 +1,8 @@
 VERSION 0.8
 
-FROM rust:1.83.0-slim
+IMPORT github.com/earthly/lib/rust AS rust
+
+FROM rust:1.84.0-slim
 WORKDIR /doco
 
 all:
@@ -47,6 +49,21 @@ rust-container:
     # Install system-level dependencies
     RUN apt update && apt upgrade -y && apt install -y curl libssl-dev pkg-config
 
+    # Initialize Rust
+    DO rust+INIT --keep_fingerprints=true
+
+rust-tarpaulin-container:
+    FROM +rust-container
+
+    # Install system-level dependencies
+    RUN apt update && apt upgrade -y && apt install -y curl libssl-dev pkg-config
+
+    # Install cargo-tarpaulin
+    DO rust+CARGO --args="install cargo-tarpaulin"
+
+    # Cache the container
+    SAVE IMAGE --cache-hint
+
 json-format:
     FROM +node-container
 
@@ -75,7 +92,7 @@ rust-build:
     FROM +rust-sources
 
     # Build the project
-    RUN cargo build --all-features --locked
+    DO rust+CARGO --args="build --all-features --locked"
 
 rust-deps-latest:
     FROM +rust-sources
@@ -84,7 +101,7 @@ rust-deps-latest:
     RUN rustup default beta
 
     # Update the dependencies to the latest versions
-    RUN cargo update
+    DO rust+CARGO --args="update"
 
     # Compile code to ensure the latest versions are compatible
     RUN RUSTFLAGS="-D deprecated" cargo check --all-features --all-targets --locked
@@ -96,10 +113,10 @@ rust-deps-minimal:
     RUN rustup default nightly
 
     # Set minimal versions for dependencies
-    RUN cargo update -Z direct-minimal-versions
+    DO rust+CARGO --args="update -Z direct-minimal-versions"
 
     # Compile code to ensure the minimal versions are compatible
-    RUN cargo check --all-features --all-targets --locked
+    DO rust+CARGO --args="check --all-features --all-targets --locked"
 
 rust-doc:
     FROM +rust-sources
@@ -114,34 +131,31 @@ rust-features:
     FROM +rust-build
 
     # Install cargo-hack
-    RUN cargo install cargo-hack
+    DO rust+CARGO --args="install cargo-hack"
 
     # Test combinations of features
-    RUN cargo hack --feature-powerset check --lib --tests
+    DO rust+CARGO --args="hack --feature-powerset check --lib --tests"
 
 rust-format:
     FROM +rust-sources
 
     # Check the code formatting
-    RUN cargo fmt --all --check
+    DO rust+CARGO --args="fmt --all --check"
 
 rust-lint:
     FROM +rust-build
 
     # Check the code for linting errors
-    RUN cargo clippy --all-targets --all-features -- -D warnings
+    DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
 
 rust-test:
     # Optionally save the report to the local filesystem
     ARG SAVE_REPORT=""
 
-    FROM +rust-build
+    FROM +rust-tarpaulin-container
 
-    # Install cargo-binstall
-    RUN cargo install cargo-binstall
-
-    # Install cargo-tarpaulin
-    RUN cargo binstall cargo-tarpaulin
+    # Copy the source code in a cache-friendly way
+    DO +COPY_RUST_SOURCES
 
     # Run the tests and measure the code coverage
     WITH DOCKER --pull selenium/standalone-firefox:latest
