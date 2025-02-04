@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["local>otterbuild/renovate-config"]
+  "extends": ["local>otterbuild/renovate-config"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["Earthfile"],
+      "matchStrings": ["rust:(?<currentValue>.*?)(-[\\w]+)?"],
+      "depNameTemplate": "rust",
+      "datasourceTemplate": "docker"
+    }
+  ]
 }
