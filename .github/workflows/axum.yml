@@ -53,7 +53,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: axum-1.83.0
+          prefix-key: axum-1.84.1
           workspaces: examples/axum-postgres -> target
 
       - name: Run Clippy
@@ -74,7 +74,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: axum-1.83.0
+          prefix-key: axum-1.84.1
           workspaces: examples/axum-postgres -> target
 
       - name: Run rustfmt
@@ -98,7 +98,7 @@ jobs:
       - name: Cache build artifacts
         uses: swatinem/rust-cache@v2.7.5
         with:
-          prefix-key: axum-1.83.0
+          prefix-key: axum-1.84.1
           workspaces: examples/axum-postgres -> target
 
       - name: Build Docker image for axum app
