@@ -25,7 +25,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            .github/workflows/axum.yml
+            .github/workflows/leptos.yml
             crates/**/*
             examples/leptos/**/*
 

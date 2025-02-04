@@ -64,6 +64,38 @@ rust-tarpaulin-container:
     # Cache the container
     SAVE IMAGE --cache-hint
 
+example-axum-container:
+    FROM +rust-sources
+
+    # Copy the example
+    COPY --keep-ts --dir examples/axum-postgres examples/axum-postgres
+
+    # Change the working directory
+    WORKDIR examples/axum-postgres
+
+example-axum-docker:
+    FROM DOCKERFILE -f examples/axum-postgres/Dockerfile .
+
+example-axum-format:
+    FROM +example-axum-container
+
+    # Check the code formatting
+    DO rust+CARGO --args="fmt --all --check"
+
+example-axum-lint:
+    FROM +example-axum-container
+
+    # Check the code for linting errors
+    DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
+
+example-axum-test:
+    FROM +example-axum-container
+
+    # Run the tests
+    WITH DOCKER --load doco:axum-postgres=+example-axum-docker
+        RUN cargo test --all-features --all-targets --locked
+    END
+
 example-leptos-container:
     FROM +rust-sources
 
