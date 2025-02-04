@@ -1,25 +1,26 @@
 # Build stage
-FROM rust:1.80.1-slim AS builder
+FROM rust:1.84.0-slim AS builder
 
 # Install system-level dependencies
 RUN apt-get update && apt-get install -y \
+    npm \
     wget \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install dart-sass
+RUN npm install -g sass
+
 # Add the WASM target
 RUN rustup target add wasm32-unknown-unknown
 
 # Install cargo-binstall
-RUN wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz \
-    && tar -xvf cargo-binstall-x86_64-unknown-linux-musl.tgz \
-    && mv cargo-binstall /usr/local/cargo/bin \
-    && rm cargo-binstall-x86_64-unknown-linux-musl.tgz
+RUN cargo install cargo-binstall
 
 # Install cargo-run-bin
-RUN cargo binstall cargo-leptos -y
+RUN cargo binstall cargo-run-bin -y
 
 WORKDIR /app
 
@@ -37,15 +38,18 @@ RUN cargo build --release
 # Copy the example's Cargo.toml and Cargo.lock
 COPY examples/leptos/Cargo.toml examples/leptos/Cargo.lock examples/leptos/
 
-# Cache the example
-RUN cargo build --release
+# Change into example directory
+WORKDIR examples/leptos
+
+# Install cargo-leptos
+RUN cargo bin --install && cargo bin --sync-aliases
 
 # Copy the source code. To optimize the Docker build, we are only selectively
 # copying files that are required by the example. The order of the following
 # statements is determined by their likelihood of changing.
-COPY examples/leptos examples/leptos
-COPY crates crates
-RUN cd examples/leptos && cargo leptos build --release
+COPY examples/leptos .
+COPY crates ../../crates
+RUN cargo leptos build --release
 
 # Runtime stage
 FROM debian:bookworm-slim AS runtime
