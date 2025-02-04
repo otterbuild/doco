@@ -64,6 +64,38 @@ rust-tarpaulin-container:
     # Cache the container
     SAVE IMAGE --cache-hint
 
+example-leptos-container:
+    FROM +rust-sources
+
+    # Copy the example
+    COPY --keep-ts --dir examples/leptos examples/leptos
+
+    # Change the working directory
+    WORKDIR examples/leptos
+
+example-leptos-docker:
+    FROM DOCKERFILE -f examples/leptos/Dockerfile .
+
+example-leptos-format:
+    FROM +example-leptos-container
+
+    # Check the code formatting
+    DO rust+CARGO --args="fmt --all --check"
+
+example-leptos-lint:
+    FROM +example-leptos-container
+
+    # Check the code for linting errors
+    DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
+
+example-leptos-test:
+    FROM +example-leptos-container
+
+    # Run the tests
+    WITH DOCKER --load doco:leptos=+example-leptos-docker
+        RUN cargo test --all-features --all-targets --locked
+    END
+
 json-format:
     FROM +node-container
 
