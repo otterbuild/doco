@@ -1,0 +1,65 @@
+---
+name: CI
+
+"on":
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  targets:
+    name: Enumerate Earthly targets
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.export-targets.outputs.targets }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: List Earthly targets
+        id: list-targets
+        run: echo "matrix=$(earthly ls)" >> "$GITHUB_OUTPUT"
+
+      - name: Export targets
+        uses: actions/github-script@v7
+        id: export-targets
+        env:
+          TARGETS: ${{ steps.list-targets.outputs.matrix }}
+        with:
+          script: |
+            let targets = process.env.TARGETS.split("\n");
+            let json = JSON.stringify(repositories);
+            console.log(json);
+            core.setOutput('targets', json);
+
+  checks:
+    runs-on: ubuntu-latest
+
+    needs: targets
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.targets.outputs.matrix) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install earthly
+        uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: 0.8
+
+      - name: Run check with Earthly
+        env:
+          EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
+        run: ${{ matrix.target }}
