@@ -25,7 +25,7 @@ jobs:
 
       - name: Export targets
         id: export-targets
-        run: echo "targets=$(earthly ls | jq -cnR '[inputs | select(startswith("+base") | not) ]')" >> "$GITHUB_OUTPUT"
+        run: echo "targets=$(earthly ls | jq -cnR '[inputs | sub("\\+"; "") | select(startswith("base") | not) ]')" >> "$GITHUB_OUTPUT"
 
   checks:
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
       matrix:
         target: ${{ fromJson(needs.targets.outputs.matrix) }}
         exclude:
-          - target: "+all"
+          - target: "all"
 
     steps:
       - name: Checkout code
@@ -52,4 +52,4 @@ jobs:
       - name: Run check with Earthly
         env:
           EARTHLY_TOKEN: ${{ secrets.EARTHLY_TOKEN }}
-        run: ${{ matrix.target }}
+        run: earthly --ci --push --remote-cache=ghcr.io/otterbuild/doco-earthly-cache:${{ matrix.target }} +${{ matrix.target }}
