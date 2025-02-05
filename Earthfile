@@ -73,7 +73,7 @@ base-example-axum-container:
     # Change the working directory
     WORKDIR examples/axum-postgres
 
-example-axum-docker:
+base-example-axum-docker:
     FROM DOCKERFILE -f examples/axum-postgres/Dockerfile .
 
 example-axum-format:
@@ -92,7 +92,7 @@ example-axum-test:
     FROM +base-example-axum-container
 
     # Run the tests
-    WITH DOCKER --load doco:axum-postgres=+example-axum-docker
+    WITH DOCKER --load doco:axum-postgres=+base-example-axum-docker
         RUN cargo test --all-features --all-targets --locked
     END
 
@@ -105,7 +105,7 @@ base-example-leptos-container:
     # Change the working directory
     WORKDIR examples/leptos
 
-example-leptos-docker:
+base-example-leptos-docker:
     FROM DOCKERFILE -f examples/leptos/Dockerfile .
 
 example-leptos-format:
@@ -124,7 +124,7 @@ example-leptos-test:
     FROM +base-example-leptos-container
 
     # Run the tests
-    WITH DOCKER --load doco:leptos=+example-leptos-docker
+    WITH DOCKER --load doco:leptos=+base-example-leptos-docker
         RUN cargo test --all-features --all-targets --locked
     END
 
