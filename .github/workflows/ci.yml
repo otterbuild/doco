@@ -28,7 +28,12 @@ jobs:
         run: echo "targets=$(earthly ls | jq -cnR '[inputs | sub("\\+"; "") | select(startswith("base") | not) ]')" >> "$GITHUB_OUTPUT"
 
   checks:
+    name: Check
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
 
     needs: targets
 
