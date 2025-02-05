@@ -25,7 +25,7 @@ jobs:
 
       - name: Export targets
         id: export-targets
-        run: echo "targets=$(earthly ls | jq -cnR '[inputs]')" >> "$GITHUB_OUTPUT"
+        run: echo "targets=$(earthly ls | jq -cnR '[inputs | select(startswith("+base") | not) ]')" >> "$GITHUB_OUTPUT"
 
   checks:
     runs-on: ubuntu-latest
@@ -36,6 +36,8 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.targets.outputs.matrix) }}
+        exclude:
+          - target: "+all"
 
     steps:
       - name: Checkout code
