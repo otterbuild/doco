@@ -32,7 +32,7 @@ COPY_RUST_SOURCES:
     COPY --keep-ts Cargo.toml Cargo.lock ./
     COPY --keep-ts --dir crates ./
 
-base-node-container:
+node-container:
     FROM node:alpine
     WORKDIR /doco
 
@@ -42,7 +42,7 @@ base-node-container:
     # Copy the source code into the container
     DO +COPY_SOURCES
 
-base-rust-container:
+rust-container:
     # Install clippy and rustfmt
     RUN rustup component add clippy rustfmt
 
@@ -52,8 +52,8 @@ base-rust-container:
     # Initialize Rust
     DO rust+INIT --keep_fingerprints=true
 
-base-rust-tarpaulin-container:
-    FROM +base-rust-container
+rust-tarpaulin-container:
+    FROM +rust-container
 
     # Install system-level dependencies
     RUN apt update && apt upgrade -y && apt install -y curl libssl-dev pkg-config
@@ -64,8 +64,8 @@ base-rust-tarpaulin-container:
     # Cache the container
     SAVE IMAGE --cache-hint
 
-base-example-axum-container:
-    FROM +base-rust-sources
+example-axum-container:
+    FROM +rust-sources
 
     # Copy the example
     COPY --keep-ts --dir examples/axum-postgres examples/axum-postgres
@@ -73,31 +73,31 @@ base-example-axum-container:
     # Change the working directory
     WORKDIR examples/axum-postgres
 
-base-example-axum-docker:
+example-axum-docker:
     FROM DOCKERFILE -f examples/axum-postgres/Dockerfile .
 
 example-axum-format:
-    FROM +base-example-axum-container
+    FROM +example-axum-container
 
     # Check the code formatting
     DO rust+CARGO --args="fmt --all --check"
 
 example-axum-lint:
-    FROM +base-example-axum-container
+    FROM +example-axum-container
 
     # Check the code for linting errors
     DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
 
 example-axum-test:
-    FROM +base-example-axum-container
+    FROM +example-axum-container
 
     # Run the tests
-    WITH DOCKER --load doco:axum-postgres=+base-example-axum-docker
+    WITH DOCKER --load doco:axum-postgres=+example-axum-docker
         RUN cargo test --all-features --all-targets --locked
     END
 
-base-example-leptos-container:
-    FROM +base-rust-sources
+example-leptos-container:
+    FROM +rust-sources
 
     # Copy the example
     COPY --keep-ts --dir examples/leptos examples/leptos
@@ -105,61 +105,61 @@ base-example-leptos-container:
     # Change the working directory
     WORKDIR examples/leptos
 
-base-example-leptos-docker:
+example-leptos-docker:
     FROM DOCKERFILE -f examples/leptos/Dockerfile .
 
 example-leptos-format:
-    FROM +base-example-leptos-container
+    FROM +example-leptos-container
 
     # Check the code formatting
     DO rust+CARGO --args="fmt --all --check"
 
 example-leptos-lint:
-    FROM +base-example-leptos-container
+    FROM +example-leptos-container
 
     # Check the code for linting errors
     DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
 
 example-leptos-test:
-    FROM +base-example-leptos-container
+    FROM +example-leptos-container
 
     # Run the tests
-    WITH DOCKER --load doco:leptos=+base-example-leptos-docker
+    WITH DOCKER --load doco:leptos=+example-leptos-docker
         RUN cargo test --all-features --all-targets --locked
     END
 
 json-format:
-    FROM +base-node-container
+    FROM +node-container
 
     # Check the JSON formatting
     RUN prettier --check **/*.{json,json5}
 
 markdown-format:
-    FROM +base-node-container
+    FROM +node-container
 
     # Check the formatting of Markdown files
     RUN prettier --check **/*.md
 
 markdown-lint:
-    FROM +base-node-container
+    FROM +node-container
 
     # Check the Markdown files for linting errors
     RUN markdownlint **/*.md
 
-base-rust-sources:
-    FROM +base-rust-container
+rust-sources:
+    FROM +rust-container
 
     # Copy the source code in a cache-friendly way
     DO +COPY_RUST_SOURCES
 
-base-rust-build:
-    FROM +base-rust-sources
+rust-build:
+    FROM +rust-sources
 
     # Build the project
     DO rust+CARGO --args="build --all-features --locked"
 
 rust-deps-latest:
-    FROM +base-rust-sources
+    FROM +rust-sources
 
     # Switch to beta toolchain
     RUN rustup default beta
@@ -171,7 +171,7 @@ rust-deps-latest:
     RUN RUSTFLAGS="-D deprecated" cargo check --all-features --all-targets --locked
 
 rust-deps-minimal:
-    FROM +base-rust-sources
+    FROM +rust-sources
 
     # Switch to nightly toolchain
     RUN rustup default nightly
@@ -183,7 +183,7 @@ rust-deps-minimal:
     DO rust+CARGO --args="check --all-features --all-targets --locked"
 
 rust-doc:
-    FROM +base-rust-sources
+    FROM +rust-sources
 
     # Generate the documentation
     RUN cargo doc --all-features --no-deps
@@ -192,7 +192,7 @@ rust-doc:
     SAVE ARTIFACT target/doc AS LOCAL target/doc
 
 rust-features:
-    FROM +base-rust-build
+    FROM +rust-build
 
     # Install cargo-hack
     DO rust+CARGO --args="install cargo-hack"
@@ -201,13 +201,13 @@ rust-features:
     DO rust+CARGO --args="hack --feature-powerset check --lib --tests"
 
 rust-format:
-    FROM +base-rust-sources
+    FROM +rust-sources
 
     # Check the code formatting
     DO rust+CARGO --args="fmt --all --check"
 
 rust-lint:
-    FROM +base-rust-build
+    FROM +rust-build
 
     # Check the code for linting errors
     DO rust+CARGO --args="clippy --all-targets --all-features -- -D warnings"
@@ -216,7 +216,7 @@ rust-test:
     # Optionally save the report to the local filesystem
     ARG SAVE_REPORT=""
 
-    FROM +base-rust-tarpaulin-container
+    FROM +rust-tarpaulin-container
 
     # Copy the source code in a cache-friendly way
     DO +COPY_RUST_SOURCES
@@ -240,7 +240,7 @@ rust-test:
     END
 
 yaml-format:
-    FROM +base-node-container
+    FROM +node-container
 
     # Check the YAML formatting
     RUN prettier --check **/*.{yml,yaml}

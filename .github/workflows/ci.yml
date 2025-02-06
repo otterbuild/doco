@@ -25,7 +25,7 @@ jobs:
 
       - name: Export targets
         id: export-targets
-        run: echo "targets=$(earthly ls | jq -cnR '[inputs | sub("\\+"; "") | select(startswith("base") | not) ]')" >> "$GITHUB_OUTPUT"
+        run: echo "targets=$(earthly ls | jq -cnR '[inputs | sub("\\+"; "")]')" >> "$GITHUB_OUTPUT"
 
   checks:
     name: Check
@@ -41,8 +41,19 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.targets.outputs.matrix) }}
+        # Exclude intermediary targets that are not meant to be run directly
         exclude:
           - target: "all"
+          - target: "base"
+          - target: "example-axum-container"
+          - target: "example-axum-docker"
+          - target: "example-leptos-container"
+          - target: "example-leptos-docker"
+          - target: "node-container"
+          - target: "rust-build"
+          - target: "rust-container"
+          - target: "rust-sources"
+          - target: "rust-tarpaulin-container"
 
     steps:
       - name: Checkout code
